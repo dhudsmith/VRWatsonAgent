@@ -11,7 +11,7 @@ def stt_callback():
     print('Made it here!')
     body = request.args['challenge_string']
 
-    resp = Response(body, status=500, mimetype='text/plain')
+    resp = Response(body, status=200, mimetype='text/plain')
 
     return resp
 
