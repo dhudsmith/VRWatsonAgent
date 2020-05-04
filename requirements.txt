@@ -1,5 +1,7 @@
-gunicorn==19.7.1
-ibmcloudenv
-livereload
-Flask>=1.0.0
-prometheus_client
+ibmcloudenv==0.2.1
+livereload==2.6.1
+Flask==1.1.2
+prometheus_client==0.7.1
+
+gevent==20.5.0
+setuptools==46.1.3
