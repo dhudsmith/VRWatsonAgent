@@ -3,11 +3,11 @@ from flask_sockets import Sockets
 
 from server.services import *
 
-import json
+import sys, traceback
 
 app = Flask(__name__, template_folder='public/', static_folder='public/', static_url_path='')
 
-sockets = Sockets(app)
+sockets: Sockets = Sockets(app)
 
 
 # index
@@ -29,17 +29,29 @@ def requests_error(error):
 
 
 # socket
+def stt(message):
+    print("TODO: act upon this message")
+    pass
+
+
 @sockets.route('/api')
 def api(socket):
     while True:
-        message = socket.receive()
-        socket.send(message)
-        #data = json.loads(message)
-        # with open('appliances.json', 'r') as json_file:
-        #     appliances = json.load(json_file)
-        # appliances[data['device']] = data['capacity']
-        # with open('appliances.json', 'w') as json_file:
-        #     json.dump(appliances, json_file)
+        try:
+            message = socket.receive()
+            if isinstance(message, bytearray):
+                print("Got a bytearray from the client. Length:", len(message))
+                stt(message)
+                socket.send("Recieved bytearray. len(%i)" % len(message))
+                socket.send(message)
+            else:
+                print("Got this from the client:", message)
+                socket.send(message)
+
+        except WebSocketError as e:
+            print("WebSocketError:", e)
+            traceback.print_exc(file=sys.stdout)
+            break
 
 
 initServices(app)
@@ -49,6 +61,7 @@ if __name__ == "__main__":
 
     from gevent import pywsgi
     from geventwebsocket.handler import WebSocketHandler
+    from geventwebsocket.exceptions import WebSocketError
 
-    server = pywsgi.WSGIServer(("127.0.0.1", 5000), app, handler_class=WebSocketHandler)
+    server = pywsgi.WSGIServer(("127.0.0.1", 5000), app, handler_class=WebSocketHandler, )
     server.serve_forever()
