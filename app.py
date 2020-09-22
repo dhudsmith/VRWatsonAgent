@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_sockets import Sockets
+from VRWatsonAgent.Assistant import assistant
 
 from server.services import *
 
@@ -12,7 +13,7 @@ sockets: Sockets = Sockets(app)
 # index
 @app.route('/')
 def hello_world():
-    return app.send_static_file('index.html')
+    return app.send_static_file('newIndex.html')
 
 
 @app.errorhandler(404)
@@ -29,8 +30,9 @@ def requests_error(error):
 
 # socket
 def stt(message):
-    print("TODO: act upon this message")
-    pass
+    assistantmsg = assistant(message)
+    print("Got this from the api assistant:", assistantmsg)
+    return assistantmsg
 
 
 @sockets.route('/api')
@@ -46,6 +48,7 @@ def api(socket):
             else:
                 print("Got this from the client:", message)
                 socket.send(message)
+                socket.send(stt(message))
 
         except WebSocketError as e:
             print("WebSocketError:", e)
