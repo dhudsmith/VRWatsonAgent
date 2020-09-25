@@ -4,7 +4,6 @@ from flask_sockets import Sockets
 from server.services import *
 
 import sys, traceback
-import watsonCall
 
 app = Flask(__name__, template_folder='public/', static_folder='public/', static_url_path='')
 
@@ -27,6 +26,13 @@ def page_not_found(error):
 def requests_error(error):
     return app.send_static_file('500.html')
 
+
+# socket
+def stt(message):
+    print("TODO: act upon this message")
+    pass
+
+
 @sockets.route('/api')
 def api(socket):
     while True:
@@ -34,8 +40,7 @@ def api(socket):
             message = socket.receive()
             if isinstance(message, bytearray):
                 print("Got a bytearray from the client. Length:", len(message))
-                transcript = watsonCall.sttCall(message)
-                print(transcript)
+                stt(message)
                 socket.send("Recieved bytearray. len(%i)" % len(message))
                 socket.send(message)
             else:
@@ -47,8 +52,6 @@ def api(socket):
             traceback.print_exc(file=sys.stdout)
             break
 
-# put in new file, make function to get transcript, use that function here instead of message
-# message has the stuff I need
 
 initServices(app)
 
