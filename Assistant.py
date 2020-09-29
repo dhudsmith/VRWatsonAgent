@@ -2,6 +2,7 @@ import json
 from ibm_watson import AssistantV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
+#pip install --upgrade "ibm-watson>=4.7.1"
 def assistant(val):
     authenticator = IAMAuthenticator('2-NzDzHD2I67WYM6MRPX7fiPCejIwZWJOvIw-Zegy212')
     assistant = AssistantV1(
