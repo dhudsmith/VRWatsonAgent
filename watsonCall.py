@@ -43,7 +43,10 @@ class MyRecognizeCallback(RecognizeCallback):
         RecognizeCallback.__init__(self)
 
     def on_data(self, data): # why is the transcript not showing up in on-data
-        print(json.dumps(data, indent=2))
+        try:
+            print(data["results"][0]["alternatives"][0]["transcript"])
+        except Exception as e:
+            print("Couldn't parse data object.", e)
 
     def on_error(self, error):
         print('Error received: {}'.format(error))
@@ -61,7 +64,7 @@ def watson_streaming_stt(buffer_queue, content_type):
             content_type= content_type,
             recognize_callback=callback,
             model='en-US_BroadbandModel',
-            interim_results=False,
+            interim_results=True,
             max_alternatives=1)
     )
     stt_stream_thread.start()
