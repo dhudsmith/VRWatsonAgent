@@ -1,0 +1,8 @@
+{
+  "apikey": "Cu-esNv39pTUbQTkOdl9BAsjI49ZCDYG73g441SoL2bY",
+  "iam_apikey_description": "Auto-generated for key d1f6228d-de9b-4203-874f-4125c4bd5297",
+  "iam_apikey_name": "WitW-VirtualBob-STT",
+  "iam_role_crn": "crn:v1:bluemix:public:iam::::serviceRole:Manager",
+  "iam_serviceid_crn": "crn:v1:bluemix:public:iam-identity::a/d4601d3d4e2d3f3a314374f221b69bc6::serviceid:ServiceId-572faecd-d487-4602-8d47-a1031567799d",
+  "url": "https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/8cc5b7cd-5038-479d-a30d-f8a82e8a88bd"
+}
