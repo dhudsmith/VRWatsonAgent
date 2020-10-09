@@ -3,6 +3,7 @@
 *.pyc
 *.egg-info
 .idea/
+.stt_creds.json
 server/localdev-config.json
 credentials.json
 localdev-config.json
