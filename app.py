@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_sockets import Sockets
 import watsonCall
-from server.services import *
 
 import sys, traceback
 from queue import Queue
@@ -9,7 +8,6 @@ import json
 
 app = Flask(__name__, template_folder='public/', static_folder='public/', static_url_path='')
 sockets: Sockets = Sockets(app)
-
 
 # index
 @app.route('/')
@@ -61,9 +59,6 @@ def api(socket: Sockets.__name__):
             print("WebSocketError:", e)
             traceback.print_exc(file=sys.stdout)
             break
-
-
-initServices(app)
 
 if __name__ == "__main__":
     app.debug = True
