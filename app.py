@@ -60,6 +60,7 @@ def api(socket: Sockets.__name__):
             traceback.print_exc(file=sys.stdout)
             break
 
+
 if __name__ == "__main__":
     app.debug = True
 
