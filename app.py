@@ -32,8 +32,6 @@ def api(socket: Sockets.__name__):
     # buffer queue (main.py)
     BUFFER_MAX_ELEMENT = 20
     buffer_queue = Queue(maxsize=BUFFER_MAX_ELEMENT)
-    stt_dict = watsonCall.watson_streaming_stt(buffer_queue, content_type="audio/l16;rate=16000;channels=1")
-
     while True:
         try:
             message = socket.receive()
@@ -46,7 +44,9 @@ def api(socket: Sockets.__name__):
 
                     if msg_dict['type'] == 'action':
                         if msg_dict['note'] == 'INITIATE':
-                            pass  # setup stt here
+                            stt_dict = watsonCall.watson_streaming_stt(buffer_queue,
+                                                                       content_type="audio/l16;rate="+ msg_dict['meta']['freq']+";channels="+msg_dict['meta']['channel'])
+
                         elif msg_dict['note'] == 'STOP_LISTENING':
                             # gracefully close stt service
                             stt_dict["audio_source"].completed_recording()
