@@ -3,6 +3,7 @@ from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from threading import Thread
 from ibm_watson.websocket import RecognizeCallback, AudioSource
 from Assistant import assistant
+from queue import Queue
 
 # authenticate stt
 apiKey = '63QDBci-JNp76iwczAz_nkEWxsa9q1ki494AozKmNJ58'  # Reed's S2T api key
@@ -15,6 +16,9 @@ speech_to_text = SpeechToTextV1(
 )
 speech_to_text.set_service_url(dallasUrl)
 
+BUFFER_MAX_ELEMENT = 20
+transcript_queue = Queue(maxsize=BUFFER_MAX_ELEMENT)
+
 
 class MyRecognizeCallback(RecognizeCallback):
     def __init__(self):
@@ -25,9 +29,12 @@ class MyRecognizeCallback(RecognizeCallback):
             results = data['results'][0]
             transcript = results['alternatives'][0]['transcript']
             if results["final"]:
-                print("Final transcript:", transcript)
                 assistant_response = assistant(transcript)
-                print(assistant_response)
+                #print("Final transcript:", transcript)
+                #print(assistant_response)
+                transcript_queue.put(transcript)
+                transcript_queue.put(assistant_response)
+
             else:
                 print("Interim transcript:", transcript)
         except Exception as e:
@@ -58,3 +65,10 @@ def watson_streaming_stt(buffer_queue, content_type):
     # return everything needed by main script
     return {'audio_source': audio_source,
             'stream_thread': stt_stream_thread}
+
+
+def pop_transcript_queue():
+    transcript = []
+    while transcript_queue.qsize() > 0:
+        transcript.append(transcript_queue.get())
+    return transcript
