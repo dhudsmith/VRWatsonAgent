@@ -17,4 +17,4 @@ def assistant(val):
         input={'text': val}
     ).get_result()
 
-    return str(response["output"]["text"])
+    return str(response["output"]["text"][0])

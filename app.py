@@ -1,31 +1,35 @@
+import os.path
+import sys
+import traceback
+from queue import Queue
+from typing import List
+
 from flask import Flask
 from flask_sockets import Sockets
-import watsonCall
 
-import sys, traceback
-from queue import Queue
-import json
-import os.path
+import watsonCall
+from SocketMessage import SocketMessage
 
 app = Flask(__name__, template_folder='public/', static_folder='public/', static_url_path='')
 sockets: Sockets = Sockets(app)
 
+
 # index
 @app.route('/')
 def hello_world():
-    return app.send_static_file('newIndex.html')  # index.html is normal site
+    return 'Hello World!'
 
 
 @app.errorhandler(404)
 @app.route("/error404")
 def page_not_found(error):
-    return app.send_static_file('404.html')
+    return "404 not found"
 
 
 @app.errorhandler(500)
 @app.route("/error500")
 def requests_error(error):
-    return app.send_static_file('500.html')
+    return "500 internal error"
 
 
 @sockets.route('/api')
@@ -33,17 +37,8 @@ def api(socket: Sockets.__name__):
     # buffer queue (main.py)
     BUFFER_MAX_ELEMENT = 20
     buffer_queue = Queue(maxsize=BUFFER_MAX_ELEMENT)
-
-    #set up stt with info from json file
-    if os.path.isfile('result.json'):
-        with open('result.json', 'r') as fp:
-            meta = json.load(fp)
-        stt_dict = watsonCall.watson_streaming_stt(buffer_queue, content_type=meta['format'] +
-                                                               ";rate=" + meta['freq'] +
-                                                               ";channels=" + meta['channel'])
-        print("Starting Stt Service")
-    else:
-        print("no meta file... waiting for INITIATE")
+    content_type = None
+    stt_dict = None
 
     while True:
         try:
@@ -52,35 +47,42 @@ def api(socket: Sockets.__name__):
                 buffer_queue.put(message)
             elif isinstance(message, str):
                 try:
-                    msg_dict = json.loads(message)
-                    print(msg_dict)
-                    if msg_dict['type'] == 'action':
-                        if msg_dict['note'] == 'INITIATE':
+                    msg = SocketMessage.from_json(message)
+                    if msg.type == 'action':
+
+                        print("Received %s message." % msg.note)
+                        # INITIATE
+                        if msg.note == 'INITIATE':
                             # setup stt here
-                            stt_dict = watsonCall.watson_streaming_stt(buffer_queue,
-                                                            content_type=msg_dict['meta']['format'] +
-                                                                         ";rate=" + msg_dict['meta']['freq'] +
-                                                                         ";channels=" + msg_dict['meta']['channel'])
+                            content_type = msg.meta['format'] + \
+                                           ";rate=" + msg.meta['freq'] + \
+                                           ";channels=" + msg.meta['channel']
 
-                            # sending meta dictionary to json file to avoid local variable
-                            # 'stt_dict' being referenced before assignment
-                            with open('result.json', 'w') as fp:
-                                json.dump(msg_dict['meta'], fp)
+                        # START LISTENING
+                        elif msg.note == 'START_LISTENING':
+                            if content_type:
+                                stt_dict = watsonCall.watson_streaming_stt(buffer_queue, content_type=content_type)
+                            else:
+                                print("Content type has not been specified. INITIATE may not have been called yet.")
 
-                        elif msg_dict['note'] == 'STOP_LISTENING':
+                        # STOP LISTENING
+                        elif msg.note == 'STOP_LISTENING':
                             # gracefully close stt service
-                            stt_dict["audio_source"].completed_recording()
-                            stt_dict["stream_thread"].join()
+                            if stt_dict:
+                                stt_dict["audio_source"].completed_recording()
+                                stt_dict["stream_thread"].join()
 
                             # Send final user & assistant transcript to web server
                             transcript = watsonCall.pop_transcript_queue()
                             if transcript:
                                 print("You: " + transcript[0])
                                 print("Assistant: " + transcript[1])
-                                for client in server.clients.values():
-                                    client.ws.send(transcript[0])
-                                    client.ws.send(transcript[1])
+
+                                # send results back over websocket
+                                send_response(transcripts=transcript)
+
                 except Exception as e:
+                    traceback.print_exc(file=sys.stdout)
                     print("The message could not be interpreted. "
                           "Taking no action. Message: %s. Error: %s." % (message, e))
         except WebSocketError as e:
@@ -89,11 +91,25 @@ def api(socket: Sockets.__name__):
             break
 
 
+def send_response(transcripts: List):
+    msg_speech = SocketMessage(message_type="AGENT_RESULT", note='SPEAKER_TRANSCRIPT', meta={'text': transcripts[0]})
+    msg_response = SocketMessage(message_type="AGENT_RESULT", note='AGENT_RESPONSE',  meta={'text': transcripts[1],
+                                                                                            'intent': None})
+
+    # TODO: why sending to all clients?
+    for client in server.clients.values():
+        client.ws.send(msg_speech.to_json())
+        client.ws.send(msg_response.to_json())
+
+
 if __name__ == "__main__":
     app.debug = True
 
     from gevent import pywsgi
     from geventwebsocket.handler import WebSocketHandler
     from geventwebsocket.exceptions import WebSocketError
-    server = pywsgi.WSGIServer(("127.0.0.1", 5000), app, handler_class=WebSocketHandler, )
+
+    # set the port dynamically with a default of 5000 for local development
+    port = int(os.getenv('PORT', '5000'))
+    server = pywsgi.WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler, )
     server.serve_forever()

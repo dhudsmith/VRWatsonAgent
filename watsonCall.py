@@ -30,8 +30,6 @@ class MyRecognizeCallback(RecognizeCallback):
             transcript = results['alternatives'][0]['transcript']
             if results["final"]:
                 assistant_response = assistant(transcript)
-                #print("Final transcript:", transcript)
-                #print(assistant_response)
                 transcript_queue.put(transcript)
                 transcript_queue.put(assistant_response)
 

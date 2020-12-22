@@ -1,9 +1,9 @@
-Flask==1.1.2
+Flask>=1.1.2
 Flask-Sockets==0.2.1
-gevent==20.5.0
+gevent>=20.5.0
 gevent-websocket==0.10.1
 greenlet==0.4.15
-gunicorn==19.7.1
+gunicorn>=19.9.0
 ibm-cloud-sdk-core==1.7.3
 ibm-watson==4.7.1
 ibmcloudenv==0.2.1
