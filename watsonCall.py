@@ -2,20 +2,27 @@ from ibm_watson import SpeechToTextV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from threading import Thread
 from ibm_watson.websocket import RecognizeCallback, AudioSource
-from Assistant import assistant
+from Assistant import Assistant
 from queue import Queue
+import os
+import sys
+import traceback
 
-# authenticate stt
-apiKey = '63QDBci-JNp76iwczAz_nkEWxsa9q1ki494AozKmNJ58'  # Reed's S2T api key
-credentialsUrl = 'https://api.us-south.speech-to-text.watson.cloud.ibm.com/instances/fe323d86-f6b2-403e-b2a0-8504af25d34b'
+# setup stt
+stt_apikey = os.getenv('STT_APIKEY')
 dallasUrl = 'https://api.us-south.speech-to-text.watson.cloud.ibm.com'
 
-authenticator = IAMAuthenticator(apiKey)
+authenticator = IAMAuthenticator(stt_apikey)
 speech_to_text = SpeechToTextV1(
     authenticator=authenticator
 )
 speech_to_text.set_service_url(dallasUrl)
 
+# setup assistant
+assistant = Assistant(apikey=os.getenv('ASSISTANT_APIKEY'),
+                      assistant_id=os.getenv('ASSISTANT_ID'))
+
+# transcript buffer
 BUFFER_MAX_ELEMENT = 20
 transcript_queue = Queue(maxsize=BUFFER_MAX_ELEMENT)
 
@@ -29,14 +36,14 @@ class MyRecognizeCallback(RecognizeCallback):
             results = data['results'][0]
             transcript = results['alternatives'][0]['transcript']
             if results["final"]:
-                assistant_response = assistant(transcript)
+                assistant_response = assistant.message(transcript, 'TS1')
                 transcript_queue.put(transcript)
                 transcript_queue.put(assistant_response)
-
             else:
                 print("Interim transcript:", transcript)
         except Exception as e:
-            print("Could not interpret data. Data: %s. Error: %s.", (data, e))
+            print("Could not interpret data. Data: %s. Error: %s." % (data, e))
+            traceback.print_exc(file=sys.stdout)
 
     def on_error(self, error):
         print('Error received: {}'.format(error))

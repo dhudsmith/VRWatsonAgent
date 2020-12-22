@@ -7,3 +7,7 @@ applications:
   buildpacks:
     - python_buildpack
   command: python app.py
+  env:
+    ASSISTANT_APIKEY: MqTaoWNDIzF00bFB1eeXSYEJ0Gt5zs_U9DfvDQuC_t5h
+    ASSISTANT_ID: 801836d2-4f05-4efc-b218-ea0ee4733fcc
+    STT_APIKEY: 63QDBci-JNp76iwczAz_nkEWxsa9q1ki494AozKmNJ58

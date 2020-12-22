@@ -1,3 +1,4 @@
+# imports
 import os.path
 import sys
 import traceback
@@ -9,6 +10,10 @@ from flask_sockets import Sockets
 
 import watsonCall
 from SocketMessage import SocketMessage
+
+# get environmental variables
+apikey = os.getenv('ASSISTANT_APIKEY')
+assistant_id = os.getenv('ASSISTANT_ID')
 
 app = Flask(__name__, template_folder='public/', static_folder='public/', static_url_path='')
 sockets: Sockets = Sockets(app)

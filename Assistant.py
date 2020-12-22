@@ -1,20 +1,61 @@
-import json
-from ibm_watson import AssistantV1
+from ibm_watson import AssistantV2
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 
-#pip install --upgrade "ibm-watson>=4.7.1"
-def assistant(val):
-    authenticator = IAMAuthenticator('2-NzDzHD2I67WYM6MRPX7fiPCejIwZWJOvIw-Zegy212')
-    assistant = AssistantV1(
-        version='2020-04-01',
-        authenticator=authenticator
-    )
+class Assistant:
+    def __init__(self, apikey, assistant_id):
 
-    assistant.set_service_url('https://api.us-south.assistant.watson.cloud.ibm.com/instances/a55f5e50-4d0f-46f3-9213-5e900b140660')
 
-    response = assistant.message(
-        workspace_id='c42f8322-0294-4d05-88ef-9d5f53414508',
-        input={'text': val}
-    ).get_result()
+        self.apikey = apikey
+        self.assistant_id = assistant_id
 
-    return str(response["output"]["text"][0])
+        # authenticate
+        authenticator = IAMAuthenticator(apikey)
+        self.assistant = AssistantV2(
+            version='2020-04-01',
+            authenticator=authenticator,
+        )
+
+        # create a session
+        response = self.assistant.create_session(
+            assistant_id=self.assistant_id
+        ).get_result()
+        self.session_id = response['session_id']
+
+    def message(self, text: str, timestep: str):
+        # structure input
+        input = {
+            'message_type': 'text',
+            'text': text
+        }
+
+        # structure the context
+        context = {
+            'skills': {
+                'main skill': {
+                    'user_defined': {
+                        'Bob_state': timestep
+                    }
+                }
+            }
+        }
+
+        response = self.assistant.message(
+            assistant_id=self.assistant_id,
+            session_id=self.session_id,
+            input=input,
+            context=context
+        ).get_result()
+
+        try:
+            return str(response["output"]['generic'][0]['text'])
+        except Exception:
+            return "<NO RESPONSE>"
+
+if __name__=='__main__':
+    import os
+    apikey = os.getenv('ASSISTANT_APIKEY')
+    assistant_id = os.getenv('ASSISTANT_ID')
+    assistant = Assistant(apikey, assistant_id)
+
+    print(assistant.message("Hi bob, how are you?", "TS4"))
+
