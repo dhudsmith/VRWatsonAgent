@@ -116,5 +116,6 @@ if __name__ == "__main__":
 
     # set the port dynamically with a default of 5000 for local development
     port = int(os.getenv('PORT', '5000'))
+
     server = pywsgi.WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler, )
     server.serve_forever()
