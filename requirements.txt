@@ -1,8 +1,8 @@
 Flask==1.1.2
 Flask-Sockets==0.2.1
-gevent==20.5.0
+gevent==20.9.0
 gevent-websocket==0.10.1
-greenlet==0.4.15
+greenlet==0.4.17
 gunicorn>19.9.0
 ibm-watson>=5.0.0
 PyJWT==1.7.1
