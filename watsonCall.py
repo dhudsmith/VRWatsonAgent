@@ -10,7 +10,7 @@ import traceback
 
 # setup stt
 stt_apikey = os.getenv('STT_APIKEY')
-dallasUrl = 'https://api.us-south.speech-to-text.watson.cloud.ibm.com'
+dallasUrl = os.getenv('DALLAS_URL')
 
 authenticator = IAMAuthenticator(stt_apikey)
 speech_to_text = SpeechToTextV1(
