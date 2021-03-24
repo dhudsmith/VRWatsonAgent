@@ -9,9 +9,12 @@ from flask import Flask
 from flask_sockets import Sockets
 
 import watsonCall
+from watsonTTS import watsonTTS
 from SocketMessage import SocketMessage
 
 # get environmental variables
+
+
 apikey = os.getenv('ASSISTANT_APIKEY')
 assistant_id = os.getenv('ASSISTANT_ID')
 
@@ -82,6 +85,10 @@ def api(socket: Sockets.__name__):
                             if transcript:
                                 print("You: " + transcript[0])
                                 print("Assistant: " + transcript[1])
+
+                                # new tts call
+                                #voiceResponse = watsonTTS(transcript[1])
+                                #voiceResponse.callSpeech()
 
                                 # send results back over websocket
                                 send_response(transcripts=transcript)

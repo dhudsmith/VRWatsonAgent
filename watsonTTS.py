@@ -2,23 +2,40 @@ from ibm_watson import TextToSpeechV1
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 import os
 
-if __name__ =='__main__':
-    # setup stt
+# setup tts
+tts_apikey = os.getenv('TTS_APIKEY')
+serviceURL = os.getenv('TTS_SERVICEURL')
+
+class watsonTTS:
+    def __init__(self, transcript):
+        self.message = transcript
+
+    def callSpeech(self):
+        with open('InFunction.wav', 'wb') as audio_file:
+            audio_file.write(
+                text_to_speech.synthesize(
+                    self.message,
+                    voice='en-US_KevinV3Voice',
+                    accept='audio/wav'
+                ).get_result().content)
+
+
+
+if __name__ == '__main__':
+    # setup tts
     tts_apikey = os.getenv('TTS_APIKEY')
-    dallasUrl = os.getenv('TTS_SERVICEURL')
+    serviceURL = os.getenv('TTS_SERVICEURL')
 
     authenticator = IAMAuthenticator(tts_apikey)
     text_to_speech = TextToSpeechV1(
         authenticator=authenticator
     )
-    text_to_speech.set_service_url(dallasUrl)
+    text_to_speech.set_service_url(serviceURL)
 
-    with open('test.wav', 'wb') as audio_file:
+    with open('main.wav', 'wb') as audio_file:
         audio_file.write(
             text_to_speech.synthesize(
-                'Let me not to the marraige of true minds admit impediment. Love is not love which alters when it alteration finds, or bends with the remover to remove. On no it is an ever fixed mark',
+                'Testing, 1, 2, 3.',
                 voice='en-US_KevinV3Voice',
                 accept='audio/wav'
             ).get_result().content)
-
-
