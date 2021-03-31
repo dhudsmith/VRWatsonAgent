@@ -31,7 +31,6 @@ def hello_world():
 @app.errorhandler(404)
 @app.route("/error404")
 def page_not_found(error):
-    raise Exception("Error!")
     return "404 not found"
 
 
@@ -125,5 +124,6 @@ if __name__ == "__main__":
     # set the port dynamically with a default of 5000 for local development
     port = int(os.getenv('PORT', '5000'))
 
+    print("Starting server at http://localhost:{port}".format(port=port))
     server = pywsgi.WSGIServer(("0.0.0.0", port), app, handler_class=WebSocketHandler, )
     server.serve_forever()
