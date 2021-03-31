@@ -1,0 +1,10 @@
+flask
+Flask-Sockets
+gevent
+gevent-websocket
+gunicorn>19.9.0
+ibm-watson>=5.0.0
+PyJWT
+ibmcloudenv
+requests
+websocket-client

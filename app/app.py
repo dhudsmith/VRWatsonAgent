@@ -31,6 +31,7 @@ def hello_world():
 @app.errorhandler(404)
 @app.route("/error404")
 def page_not_found(error):
+    raise Exception("Error!")
     return "404 not found"
 
 
