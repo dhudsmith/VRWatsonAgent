@@ -8,6 +8,13 @@ from queue import Queue
 
 class watsonTTS:
     def __init__(self, tts_apikey, service_url, audio_queue: Queue, voice='en-US_KevinV3Voice'):
+        """
+
+        :param tts_apikey:
+        :param service_url:
+        :param audio_queue:
+        :param voice:
+        """
         # get tts token
         auth = IAMAuthenticator(tts_apikey)
 
@@ -15,18 +22,42 @@ class watsonTTS:
         self.audio_queue = audio_queue
 
         self.wsURI = f"wss://{service_url}/v1/synthesize?access_token={auth.token_manager.get_token()}&voice={self.voice}"
-        # establish the websocket connection
+
+        # the websocket object
         self.ws = websocket.WebSocket()
+
+    def synthesize_speech_ws(self, text) -> Thread:
+        """
+        we will listen for messages on a separate thread
+        receiving messages over the websocket involves waiting on
+        a network data transfer. This releases the Global Interpreter
+        Lock allowing the main thread to use the cpu to do other good
+        things like process data received from previous messages. This
+        function returns the thread object so that it can later be joined.
+        :param text: The text to be spoken
+        :return: the thread object which does the work of receiving audio chunks over the websocket
+        """
+
+        # connect to the websocket
         self.ws.connect(self.wsURI)
 
-        self.listen_thread = Thread(target=self.listen)
-        self.listen_thread.start()
-
-    def synthesize_speech_ws(self, text):
+        # format message and send to TTS over the websocket
         message = json.dumps(dict(text=text, accept='audio/wav'))
         self.ws.send(message)
 
-    def listen(self):
+        # create the thread and start listening
+        listen_thread = Thread(target=self.listen)
+        listen_thread.start()
+
+        return listen_thread
+
+    def listen(self) -> None:
+        """
+        Receive new messages until the websocket closes. This stopping condition is sufficient
+        because, according to the TTS docs, the websocket server will close the connection once
+        the audio has finished sending.
+        """
+
         while self.ws.connected:
             self.audio_queue.put(self.ws.recv())
 
@@ -49,15 +80,28 @@ if __name__ == '__main__':
     Liberty, and dedicated to the proposition that all men are created equal.
     """
 
-    tts.synthesize_speech_ws(text)
+    listen_thread = tts.synthesize_speech_ws(text)
 
     # in this example, we will stream the audio into a file, but you could equally well pass the chunks along
-    # to a client application for playback
-    with open('audio.wav', 'wb') as f:
+    # to a client application for playback. In our case, we will send l16 audio over the websocket to unity.
+    # Below, the while loop continues to get messages from the audio_gueue. If these messages are bytes, then
+    # they are written to the open wav file. If they are string, they are printed to the console. When Watson TTS
+    # completes the audio synthesis, it closes the websocket connection. In this case, the while loop first "joins"
+    # the listen thread which pauses continued execution until thread completes. This guarantees that all audio chunks
+    # have been put in the queue. After joining the thread, an audio chunk (if any) is read from the queue and then
+    # the while loop is exited.
+    with open('audio1.wav', 'wb') as f:
         while True:
+            print("Queue size:", audio_queue.qsize())
             # wait for thread to complete to make sure we get last chunks
-            if not tts.ws.connected:
-                tts.listen_thread.join()
+            if not tts.ws.connected and listen_thread.is_alive():
+                print("Websocket connection closed so joining thread.")
+                listen_thread.join()
+
+            # exit if the thread is dead and the queue is empty
+            if not listen_thread.is_alive() and audio_queue.qsize()==0:
+                print("Thread dead and queue empty so breaking out of loop.")
+                break
 
             # get the audio and write to a file if it is bytes
             chunk = audio_queue.get()
@@ -67,11 +111,35 @@ if __name__ == '__main__':
             elif isinstance(chunk, str):
                 print(chunk)
 
-            # break out of the while loop
-            if not tts.ws.connected:
+    # now that that's done, we can go ahead and generate speech for another text
+    # the significance of this as that we did not have to re-initialize the watsonSTT
+    # class, saving a bit of time
+
+    text2 = \
+        """Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so
+        dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a
+        portion of that field, as a final resting place for those who here gave their lives that that nation might
+        live. It is altogether fitting and proper that we should do this. """
+
+    listen_thread = tts.synthesize_speech_ws(text2)
+
+    with open('audio2.wav', 'wb') as f:
+        while True:
+            print("Queue size:", audio_queue.qsize())
+            # wait for thread to complete to make sure we get last chunks
+            if not tts.ws.connected and listen_thread.is_alive():
+                print("Websocket connection closed so joining thread.")
+                listen_thread.join()
+
+            # exit if the thread is dead and the queue is empty
+            if not listen_thread.is_alive() and audio_queue.qsize()==0:
+                print("Thread dead and queue empty so breaking out of loop.")
                 break
 
-
-
-
-
+            # get the audio and write to a file if it is bytes
+            chunk = audio_queue.get()
+            if isinstance(chunk, bytes):
+                f.write(chunk)
+                print(f"Wrote chunk of {len(chunk)} bytes.")
+            elif isinstance(chunk, str):
+                print(chunk)
