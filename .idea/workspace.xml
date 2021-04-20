@@ -2,14 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="fa1913da-b372-467c-b7e2-4a4f3e5309c4" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/Build_Docker_Runtime.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/runConfigurations/watsonTTS_stream.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/VRWatsonAgent.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/VRWatsonAgent.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/remote-mappings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/run_app.xml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/audio/readme.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/watsonTTS_stream.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/watsonTTS_stream.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -50,12 +45,6 @@
       <item itemvalue="Docker.Build Docker Runtime" />
       <item itemvalue="Python.watsonTTS_stream" />
     </list>
-    <recent_temporary>
-      <list>
-        <item itemvalue="Python.watsonTTS_stream" />
-        <item itemvalue="Docker.Build Docker Runtime" />
-      </list>
-    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -66,6 +55,7 @@
       <option name="presentableId" value="Default" />
       <updated>1618864437106</updated>
       <workItem from="1618864442056" duration="4133000" />
+      <workItem from="1618877353784" duration="2006000" />
     </task>
     <servers />
   </component>
@@ -82,8 +72,9 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/VRWatsonAgent$watsonTTS_stream.coverage" NAME="watsonTTS_stream Coverage Results" MODIFIED="1618868491655" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app" />
+    <SUITE FILE_PATH="coverage/VRWatsonAgent$watsonTTS_stream.coverage" NAME="watsonTTS_stream Coverage Results" MODIFIED="1618878901067" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/app" />
   </component>
 </project>
