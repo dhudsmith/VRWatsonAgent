@@ -7,4 +7,5 @@ server/localdev-config.json
 credentials.json
 localdev-config.json
 venv/
-test.wav
+*.wav
+assets
