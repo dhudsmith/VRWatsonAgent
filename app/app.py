@@ -8,8 +8,7 @@ from typing import List
 from flask import Flask
 from flask_sockets import Sockets
 
-import watsonCall
-from watsonUtilities import watsonTTS, watsonSTT, Assistant
+from watsonUtilities import WatsonTTS, WatsonSTT, Assistant
 from transcript import Transcript
 from SocketMessage import SocketMessage
 
@@ -40,6 +39,7 @@ def api(socket: Sockets.__name__):
     # buffer queue (main.py)
     BUFFER_MAX_ELEMENT = 20
     buffer_queue = Queue(maxsize=BUFFER_MAX_ELEMENT)
+    response_queue = Queue(maxsize=BUFFER_MAX_ELEMENT)
     content_type = None
     stt_dict = None
     currentTranscript = Transcript(None, None)
@@ -66,7 +66,7 @@ def api(socket: Sockets.__name__):
                         # START LISTENING
                         elif msg.note == 'START_LISTENING':
                             if content_type:
-                                stt_dict = watsonSTT(buffer_queue, content_type, currentTranscript)
+                                stt_dict = WatsonSTT(buffer_queue, content_type, currentTranscript)
                             else:
                                 print("Content type has not been specified. INITIATE may not have been called yet.")
 
@@ -76,23 +76,25 @@ def api(socket: Sockets.__name__):
                             if stt_dict:
                                 stt_dict.close_connection()
 
-                            #get assistant response
-                            currentTranscript.assistantResponse = assistant.message(currentTranscript.originalMessage,'TS1')
+                            # get assistant response
+                            currentTranscript.assistantResponse = assistant.message(currentTranscript.originalMessage,
+                                                                                    'TS1')
 
                             # Send final user & assistant transcript to web server
-                            transcript = watsonCall.pop_transcript_queue()
+
                             if currentTranscript.originalMessage is not None:
 
                                 print("You: " + currentTranscript.originalMessage)
                                 print("Assistant: " + currentTranscript.assistantResponse)
 
                                 # new tts call
-                                voiceResponse = watsonTTS()
-                                voiceResponse.callSpeech(currentTranscript)
+                                voiceResponse = WatsonTTS(response_queue)
+                                voiceResponse.synthesize_speech_to_file(currentTranscript.assistantResponse,
+                                                                        '../assets/audio/TEST_ALL.wav')
 
                                 # send results back over websocket
-                                #TODO
-                                #send_response(transcripts=transcript)
+                                # TODO
+                                # send_response(transcripts=transcript)
 
                 except Exception as e:
                     traceback.print_exc(file=sys.stdout)

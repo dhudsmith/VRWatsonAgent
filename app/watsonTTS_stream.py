@@ -1,8 +1,10 @@
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 import websocket
-import os, json
+import os
+import json
 from threading import Thread
 from queue import Queue
+
 websocket.enableTrace(True)
 
 
