@@ -1,8 +1,9 @@
-flask
-Flask-Sockets
-gevent
-gevent-websocket
-gunicorn>19.9.0
+werkzeug==1.0.1
+flask==1.1.2
+Flask-Sockets==0.2.1
+gevent==20.12.1
+gevent-websocket==0.10.1
+gunicorn==19.9.0
 ibm-watson>=5.0.0
 PyJWT
 ibmcloudenv
