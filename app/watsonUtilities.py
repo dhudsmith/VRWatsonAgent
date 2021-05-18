@@ -81,7 +81,9 @@ class WatsonTTS:
         """
 
         while self.ws.connected:
-            self.audio_queue.put(self.ws.recv())
+            chunk = self.ws.recv()
+            if isinstance(chunk, bytes):
+                self.audio_queue.put(chunk)
 
     def synthesize_speech_to_file(self, text: str, filename: str) -> None:
         """
@@ -121,6 +123,25 @@ class WatsonTTS:
                 # otherwise just print it
                 elif isinstance(chunk, str):
                     print(chunk)
+
+    def synthesize_speech_to_byte_array(self, text: str) -> None:
+
+        listen_thread = self.synthesize_speech_ws(text)
+
+        while True:
+            print("Queue size:", self.audio_queue.qsize())
+            # wait for thread to complete to make sure we get last chunks
+            if not self.ws.connected and listen_thread.is_alive():
+                print("Websocket connection closed so joining thread.")
+                listen_thread.join()
+                break
+
+
+
+
+
+
+
 
 
 # transcript buffer
