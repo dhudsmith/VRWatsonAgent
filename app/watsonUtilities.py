@@ -64,7 +64,7 @@ class WatsonTTS:
         self.ws.connect(self.wsURI)
 
         # format message and send to TTS over the websocket
-        message = json.dumps(dict(text=text, accept='audio/wav'))
+        message = json.dumps(dict(text=text, accept='audio/l16;rate=16000;endianness=little-endian'))
         self.ws.send(message)
 
         # create the thread and start listening
@@ -124,17 +124,40 @@ class WatsonTTS:
                 elif isinstance(chunk, str):
                     print(chunk)
 
-    def synthesize_speech_to_byte_array(self, text: str) -> None:
+    def synthesize_speech_over_web_socket(self, text: str, web_socket) -> int:
+        """
 
+        :param text: message to transcribe to audio
+        :param web_socket: socket connection to send audio data over
+        :return: integer number of bytes sent over web socket
+        """
+        temp = bytearray()
         listen_thread = self.synthesize_speech_ws(text)
-
+        total_bytes = 0
         while True:
             print("Queue size:", self.audio_queue.qsize())
             # wait for thread to complete to make sure we get last chunks
             if not self.ws.connected and listen_thread.is_alive():
                 print("Websocket connection closed so joining thread.")
                 listen_thread.join()
+
+            # exit if the thread is dead and the queue is empty
+            if not listen_thread.is_alive() and self.audio_queue.qsize() == 0:
+                print("Thread dead and queue empty so breaking out of loop.")
+                web_socket.send(temp)
                 break
+
+            # get the audio and write to a file if it is bytes
+            chunk = self.audio_queue.get()
+            if isinstance(chunk, bytes):
+                # web_socket.send(chunk)
+                temp.extend(chunk)
+                total_bytes += len(chunk)
+                print(f"Sent chunk of {len(chunk)} bytes.")
+            # otherwise just print it
+            elif isinstance(chunk, str):
+                print(chunk)
+        return total_bytes
 
 
 

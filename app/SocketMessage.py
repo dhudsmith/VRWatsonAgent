@@ -2,6 +2,9 @@ import json
 
 
 class SocketMessage:
+    """
+    Encapsulates all the data to send over websocket to clients
+    """
     # members
     def __init__(self, message_type: str = None, note: str = None, meta: dict = None):
         self.type = message_type

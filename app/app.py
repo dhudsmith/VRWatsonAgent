@@ -1,10 +1,8 @@
 # imports
 import os.path
-import socket
 import sys
 import traceback
 from queue import Queue
-from typing import List
 
 from flask import Flask
 from flask_sockets import Sockets
@@ -45,8 +43,7 @@ def api(socket: Sockets.__name__):
     stt_dict = None
     current_transcript = Transcript(None, None)
     assistant = Assistant()
-    voice_response = None
-    byte_response_queue = Queue()
+    voice_response = WatsonTTS(response_queue)
 
     while True:
         try:
@@ -79,35 +76,31 @@ def api(socket: Sockets.__name__):
                             if stt_dict:
                                 stt_dict.close_connection()
 
-                            # get assistant response
-                            current_transcript.assistantResponse = assistant.message(current_transcript.originalMessage,
-                                                                                     'TS1')
-
+                            numBytes = 0
                             # Send final user & assistant transcript to web server
                             if current_transcript.originalMessage is not None:
+
+                                # get assistant response
+                                current_transcript.assistantResponse = assistant.message(
+                                    current_transcript.originalMessage,
+                                    'TS1')
+
                                 print("You: " + current_transcript.originalMessage)
                                 print("Assistant: " + current_transcript.assistantResponse)
 
-                                # tts call
-                                voice_response = WatsonTTS(response_queue)
-                                # tts to byte array
-                                voice_response.synthesize_speech_to_byte_array(current_transcript.assistantResponse)
+                                # check for assistant response to message
+                                if current_transcript.assistantResponse != '<NO RESPONSE>':
+                                    # tts over Web Socket
+                                    numBytes = voice_response.synthesize_speech_over_web_socket(
+                                        current_transcript.assistantResponse,
+                                        socket)
 
-                                # file tts for testing
-                                # voice_response.synthesize_speech_to_file(current_transcript.assistantResponse,
-                                #                                  '../assets/audio/TEST.wav')
-
-                                # send results back over websocket
-                                # TODO
-                                send_transcript(transcripts=current_transcript)
-                                current_transcript = Transcript(None, None)
-
-                            if voice_response is not None:
-                                while response_queue.qsize() > 0:
-                                    print(f"queue size: {(response_queue.qsize())}")
-                                    send_byte_array(response_queue.get())
-
-                                send_done_synthesis_message()
+                            # send results back over websocket
+                            print("Sending Transcript")
+                            send_transcript(transcripts=current_transcript)
+                            current_transcript = Transcript(None, None)
+                            print("Sending Completed message signal")
+                            send_done_synthesis_message(numBytes)
 
                 except Exception as e:
                     traceback.print_exc(file=sys.stdout)
@@ -120,6 +113,10 @@ def api(socket: Sockets.__name__):
 
 
 def send_transcript(transcripts: Transcript):
+    """
+    Sends the transcript over the websocket to the client
+    :param transcripts: instance of transcript class that contains the current transaction
+    """
     msg_speech = SocketMessage(message_type="AGENT_RESULT", note='SPEAKER_TRANSCRIPT',
                                meta={'text': transcripts.originalMessage})
     msg_response = SocketMessage(message_type="AGENT_RESULT", note='AGENT_RESPONSE',
@@ -131,21 +128,17 @@ def send_transcript(transcripts: Transcript):
         client.ws.send(msg_response.to_json())
 
 
-def send_done_synthesis_message():
+def send_done_synthesis_message(num_bytes: int):
     """
     Sends message to client that TTS synthesis is complete
+    :param num_bytes: the integer number of bytes sent over the websocket
     """
     msg_done = SocketMessage(message_type="action", note='DONE_SPEECH_SYNTHESIS',
-                             meta={'text': 'dont break?'})
+                             meta={'bytes': num_bytes})
 
     # TODO: why sending to all clients?
     for client in server.clients.values():
         client.ws.send(msg_done.to_json())
-
-
-def send_byte_array(chunk: bytearray):
-    for client in server.clients.values():
-        client.ws.send(chunk)
 
 
 if __name__ == "__main__":
